@@ -20,6 +20,10 @@ npm install -g lbb
 ACCOUNT_LOGIN=430000000000 ACCOUNT_PASSWORD=password lbb ~/directory_where_to_store_files
 ```
 
+**optional parameters:**
+`LASTDAYS=60` will only download statements from within the last 60 days
+
+
 **debug usage (opens electron window)**
 
 ```shell

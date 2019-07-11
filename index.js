@@ -15,6 +15,18 @@ if (!process.env.ACCOUNT_PASSWORD) {
   process.exit(1);
 }
 
+// Restrict period to last x days
+var loadFrom = null;
+if(process.env.LASTDAYS != null) {
+  process.env.LASTDAYS = parseInt(process.env.LASTDAYS);
+  loadFrom = new Date();
+  loadFrom.setDate(loadFrom.getDate() - process.env.LASTDAYS);
+  console.log(`will download last ${process.env.LASTDAYS} days - from ${loadFrom}`);
+}
+else {
+  console.log("will download everything without restriction (use env LASTDAYS=60)");
+}
+
 var downloadDir = '.';
 
 if (process.argv[2]) {
@@ -62,25 +74,36 @@ nightmare
   .then((dates) => {
     // Go into each statement and download PDF
     dates.forEach(function(date) {
-      let downloadCsvSelector = '#bill_detail > tbody > tr > td.daten > table:nth-child(2) > tbody > tr:nth-child(7) > td > a';      
-      
-      nightmare
-        .click('input[name="bt_STMT"][value="' + date + '"]')  // Click the date
-        
-        // Download the PDF
-        .wait('input[name="bt_STMTPDF"]')   // Wait for the "PDF"-image
-        .click('input[name="bt_STMTPDF"]')  // Click on it
-        .waitDownloadsComplete()
 
-        // Download the CSV
-        .wait('input[name="bt_STMTSAVE"]')  // Wait for the "Rechnung speichern" button
-        .click('input[name="bt_STMTSAVE"]') // Click on it
-        .wait(downloadCsvSelector)          // Wait for the "Rechnung speichern als csv" button
-        .click(downloadCsvSelector)         // Click on it
-        .waitDownloadsComplete()
+      // Convert to real Date
+      let currentDate = new Date(date.substr(-4),date.substr(3,2)-1,date.substr(0,2),0,0,0,0);
 
-        // Go back to "Statements" in the Navbar
-        .click('a.haupt[id="nav.stmt"]')
+      if(loadFrom && currentDate >= loadFrom || !loadFrom) {
+        console.log(`will download ${date}`);
+
+        let downloadCsvSelector = '#bill_detail > tbody > tr > td.daten > table:nth-child(2) > tbody > tr:nth-child(7) > td > a';      
+
+        nightmare
+          .click('input[name="bt_STMT"][value="' + date + '"]')  // Click the date
+          
+          // Download the PDF
+          .wait('input[name="bt_STMTPDF"]')   // Wait for the "PDF"-image
+          .click('input[name="bt_STMTPDF"]')  // Click on it
+          .waitDownloadsComplete()
+
+          // Download the CSV
+          .wait('input[name="bt_STMTSAVE"]')  // Wait for the "Rechnung speichern" button
+          .click('input[name="bt_STMTSAVE"]') // Click on it
+          .wait(downloadCsvSelector)          // Wait for the "Rechnung speichern als csv" button
+          .click(downloadCsvSelector)         // Click on it
+          .waitDownloadsComplete()
+
+          // Go back to "Statements" in the Navbar
+          .click('a.haupt[id="nav.stmt"]')
+      }
+      else {
+        console.log(`will not download ${date}, out of range`);
+      }
     });
     nightmare.waitDownloadsComplete();
     return nightmare.end();
