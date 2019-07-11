@@ -64,12 +64,25 @@ nightmare
   .then((dates) => {
     // Go into each statement and download PDF
     dates.forEach(function(date) {
+      let downloadCsvSelector = '#bill_detail > tbody > tr > td.daten > table:nth-child(2) > tbody > tr:nth-child(7) > td > a';
+
       nightmare
         .click('input[name="bt_STMT"][value="' + date + '"]')  // Click the date
-        .wait('input[name="bt_STMTPDF"]')                      // Wait for the "PDF"-image
-        .click('input[name="bt_STMTPDF"]')                     // Click on it
+        
+        // Download the PDF
+        .wait('input[name="bt_STMTPDF"]')   // Wait for the "PDF"-image
+        .click('input[name="bt_STMTPDF"]')  // Click on it
         .waitDownloadsComplete()
-        .back()
+
+        // Download the CSV
+        .wait('input[name="bt_STMTSAVE"]')  // Wait for the "Rechnung speichern" button
+        .click('input[name="bt_STMTSAVE"]') // Click on it
+        .wait(downloadCsvSelector)          // Wait for the "Rechnung speichern als csv" button
+        .click(downloadCsvSelector)         // Click on it
+        .waitDownloadsComplete()
+
+        // Go back to "Statements" in the Navbar
+        .click('a.haupt[id="nav.stmt"]')
     });
     nightmare.waitDownloadsComplete();
     return nightmare.end();
