@@ -25,11 +25,11 @@ try {
   downloadDir = fs.realpathSync(downloadDir);
   fs.accessSync(downloadDir, fs.F_OK);
 } catch (e) {
-  console.log("directory '" + downloadDir +  "' is not a directory or not writeable. exiting.");
+  console.log(`directory '${downloadDir} is not a directory or not writeable. exiting.`);
   process.exit(1);
 }
 
-console.log('will download invoices to: ' + downloadDir);
+console.log(`will download invoices to: ${downloadDir}`);
 
 nightmare = Nightmare({
   show: !!process.env.DEBUG,
@@ -40,7 +40,7 @@ nightmare = Nightmare({
 
 nightmare.on('download', function(state, downloadItem){
   if (state == 'started') {
-    console.log("downloading invoice " +  downloadItem['filename'] );
+    console.log(`downloading invoice ${downloadItem['filename']}`);
     nightmare.emit('download', downloadItem);
   }
 })
@@ -56,16 +56,14 @@ nightmare
   .wait('input[name=bt_STMT]')      // Wait for the list
   .evaluate(function () {
     // Collect all the Statement-Links
-    var buttons = document.querySelectorAll('input[name=bt_STMT]');
-    return Array.prototype.map.call(buttons, function(e) {
-      return e.getAttribute('value')
-    });
+    return Array.from(document.querySelectorAll('input[name=bt_STMT]'))
+      .map(e => e.getAttribute('value'));
   })
   .then((dates) => {
     // Go into each statement and download PDF
     dates.forEach(function(date) {
-      let downloadCsvSelector = '#bill_detail > tbody > tr > td.daten > table:nth-child(2) > tbody > tr:nth-child(7) > td > a';
-
+      let downloadCsvSelector = '#bill_detail > tbody > tr > td.daten > table:nth-child(2) > tbody > tr:nth-child(7) > td > a';      
+      
       nightmare
         .click('input[name="bt_STMT"][value="' + date + '"]')  // Click the date
         
