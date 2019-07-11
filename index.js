@@ -51,21 +51,23 @@ nightmare
   .type('input[name=user]',     process.env.ACCOUNT_LOGIN)
   .type('input[name=password]', process.env.ACCOUNT_PASSWORD)
   .click('input[name=bt_LOGON]')
-  .wait('a.haupt[id="nav.stmt"]')
-  .click('a.haupt[id="nav.stmt"]')
-  .wait('input[name=bt_STMT]')
+  .wait('a.haupt[id="nav.stmt"]')   // Wait for "Rechnungen" in Navbar
+  .click('a.haupt[id="nav.stmt"]')  // Click "Rechnungen"
+  .wait('input[name=bt_STMT]')      // Wait for the list
   .evaluate(function () {
+    // Collect all the Statement-Links
     var buttons = document.querySelectorAll('input[name=bt_STMT]');
     return Array.prototype.map.call(buttons, function(e) {
       return e.getAttribute('value')
     });
   })
   .then((dates) => {
+    // Go into each statement and download PDF
     dates.forEach(function(date) {
       nightmare
-        .click('input[name="bt_STMT"][value="' + date + '"]')
-        .wait('input[name="bt_STMTPDF"]')
-        .click('input[name="bt_STMTPDF"]')
+        .click('input[name="bt_STMT"][value="' + date + '"]')  // Click the date
+        .wait('input[name="bt_STMTPDF"]')                      // Wait for the "PDF"-image
+        .click('input[name="bt_STMTPDF"]')                     // Click on it
         .waitDownloadsComplete()
         .back()
     });
